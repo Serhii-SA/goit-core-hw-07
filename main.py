@@ -1,9 +1,6 @@
-# Незакінченне ДЗ 07
-
+#  ДЗ 07
 from collections import UserDict
-from datetime import datetime
-from datetime import date
-from datetime import timedelta
+from datetime import datetime , date , timedelta
 
 class Field:
     def __init__(self, value):
@@ -16,21 +13,8 @@ class Name(Field):
     pass
 
 class Birthday(Field):
-    def __init__(self, value:str): #Date format (DD.MM.YYYY)
-        
-        try:
-            y=int(value[6:10]); m=int(value[3:5]); d=int(value[0:2])
-            date(y,m,d)
-            user_date = datetime.strptime(value, "%d.%m.%Y")
-            self.value = user_date
-            #return self.user_date
-             
-            # Додайте перевірку коректності даних
-            # та перетворіть рядок на об'єкт datetime
-        except ValueError:
-            raise ValueError("Invalid date format. Use DD.MM.YYYY")
-        
-
+    def __init__(self, value): 
+        self.value = value
 
 class Phone(Field):
 		pass
@@ -42,35 +26,17 @@ class Record:
         self.birthday = None
 
     def __str__(self):
-        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}, birthday {self.birthday}"
+        return f"Contact name: {self.name.value}, phone: {'; '.join(p.value for p in self.phones)}, birthday {self.birthday}"
 
     def add_phone(self,ph_num_to_add):
         if len(ph_num_to_add)== 10:
             self.phones.append(Phone(ph_num_to_add))
         else:
             print("Phonenumber has invalid format")
+            raise TypeError
 
     def add_birthday(self,b_day):
          self.birthday=Birthday(b_day)
-
-    def remove_phone(self,ph_num_to_del):
-        if len(ph_num_to_del)== 10:
-            pos=0
-            for n_del in self.phones:
-                if ph_num_to_del == n_del.value:
-                    self.phones.pop(pos)
-                else:
-                    pos +=1
-            print(f"No < {ph_num_to_del} > in this contact")
-        else:
-            print("Phonenumber has invalid format")
-
-    def edit_phone(self,*args):
-        for a in args:
-            if len(a)== 10:
-                self.phones.append(Phone(a))
-            else:
-                print("Phonenumber has invalid format") 
 
     def find_phone(self,str_nb):
         for n in self.phones:
@@ -79,82 +45,106 @@ class Record:
         print(f"Contact {self.name} doesn`t consists {str_nb}")
     
 class AddressBook(UserDict):
-        def add_record(self,cont):
-              self.data.update([(cont.name,cont)])
-        def show_all(self):
-            for name, record in self.data.items():
-                print(record)    
-        def find(self,nm):
-                for name, record in self.data.items():
-                    if name.value == nm :
-                        return record
-                print(f"No < {nm} > contact in the phonebook")
-        def delete(self,nm):
-            for name, record in self.data.items():                
-                if name.value == nm :
-                    n_del = name
-            try:         
-                self.data.pop(n_del)
-            except Exception:
-                print(f"No < {nm} > contact in the phonebook") 
-        def get_upcoming_birthdays(self):
-            dt_tday=datetime.today().date()  #сьог.дата
-            prg_out = [] # порожн.список в який засунемо вихідні словники  (ключ name) та дату привітання (ключ congratulation_date, дані якого у форматі рядка 'рік.місяць.дата'). 
-            for name, record in self.data.items():
+    def add_record(self,cont):
+            self.data.update([(cont.name,cont)])
+
+    def show_all(self):
+        if self.data == {}:
+            return print("\nContacts list is empty.\n")
+        for name, record in self.data.items():
+            print(record)  
+
+    def find(self,nm):
+        for name, record in self.data.items():
+            if name.value == nm :
+                return record
+        print(f"No < {nm} > contact in the phonebook")
+        raise TypeError
+                
+    def delete(self,nm):
+        for name, record in self.data.items():                
+            if name.value == nm :
+                n_del = name
+        try:         
+            self.data.pop(n_del)
+        except Exception:
+            print(f"No < {nm} > contact in the phonebook") 
+
+    def get_upcoming_birthdays(self):
+        dt_tday=datetime.today().date()  #сьог.дата
+        prg_out = [] # порожн.список в який засунемо вихідні словники  (ключ name) та дату привітання (ключ congratulation_date, дані якого у форматі рядка 'рік.місяць.дата'). 
+        for name, record in self.data.items():
+            if record.birthday != None: # Виключаємо контакти без ДР
                 crnt_us_nm = name.value
-                print(record.birthday.value)
-                print(dt_tday)
+
                 user_brday = record.birthday.value #зі словника витягає ДР клієнта та робить об.дататайм
                 user_brday_crn_year=user_brday.replace(year=dt_tday.year) # замінюєм рік в ДР на поточн.
-                print(user_brday_crn_year)
+
                 delta = user_brday_crn_year.toordinal()-dt_tday.toordinal() # визначаємо різницю в дн.між ДР та поточн.датою знак(-) -ДР вже був
-                print(delta)
+               
                 if 0<= delta < 8 : # якщо ДР клієнта в найближчі 7днів
                     week_d = user_brday_crn_year.weekday() # визначаємо день тижня
-                    print(week_d)
+                  
                     if 0<= week_d<5 : # якщо ДР у робочий день
                         cr_lst_conday =[crnt_us_nm,user_brday_crn_year.strftime("%Y.%m.%d")]
-                        #prg_out.append(cr_dic_conday)
+
                     elif week_d==5: # якщо ДР у сб
                         us_bdsd_repl = user_brday_crn_year + timedelta(days=2)
                         cr_lst_conday =[crnt_us_nm,us_bdsd_repl.strftime("%Y.%m.%d")]
-                        #prg_out.append(cr_dic_conday)
+
                     else: # решта тоді ДР у нд
                         us_bdsd_repl = user_brday_crn_year + timedelta(days=1)
                         cr_lst_conday =[crnt_us_nm, us_bdsd_repl.strftime("%Y.%m.%d")]
                     prg_out.append(cr_lst_conday)
+
                 elif delta < 0: # якщо ДР вже минув
                     us_bdsd_repl = user_brday_crn_year.replace(year=dt_tday.year+1) # додаємо 1рік до дня привітання
                     cr_lst_conday =[crnt_us_nm, us_bdsd_repl.strftime("%Y.%m.%d")]
                     prg_out.append(cr_lst_conday)
-            return prg_out
+        return prg_out
 
 def input_error(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
         except ValueError:
-            return "You didn't attached the Name and phone nbr or attached too many arg-s.\nGive me name and phone please."
+            return print("You didn't attached the Name and phone nbr or attached too many arg-s(or wrong format).\nGive me correct imput, please.")
         except KeyError:
             nm = args[0]
             return print(f"No user with name - {nm[0]}")
+        except IndexError:
+            return print("Недостатньо аргументів")
+        except Exception:
+            return print("Something wrong :( ")
     return inner
 
 text= ''' 
-"add username phone".
+Для даного Боту доступні нижчеперелічені команди :
+
+"add <username> <phone>".
 
  За цією командою бот зберігає у пам'яті, 
-новий контакт. Користувач вводить ім'я username та номер телефону phone, обов'язково через пробіл.
+новий контакт. Користувач вводить ім'я <username> та номер телефону <phone>, обов'язково через пробіл.
 
-"change username phone"
-За цією командою бот зберігає в пам'яті новий номер телефону phone для 
-контакту username, що вже існує в записнику.
+"change <username> <phone>"
+За цією командою бот зберігає в пам'яті новий номер телефону <phone> для 
+контакту <username>, що вже існує в записнику.
 
-"phone username"
- За цією командою бот виводить у консоль номер телефону для зазначеного контакту username.
+"phone <username>"
+ За цією командою бот виводить у консоль номер телефону для зазначеного контакту <username>.
 
 "all"
  За цією командою бот виводить всі збереженні контакти з номерами телефонів у консоль.
+
+ "add-birthday <username> <birthday date (Date format (DD.MM.YYYY)) >"
+ За цією командою бот зберігає в пам'яті дату народження для контакту <username>.
+
+ "show-birthday <username>"
+ За цією командою бот виводить у консоль дату народження для зазначеного контакту <username>.
+
+ "birthdays"
+ За цією командою бот показує список користувачів, яких потрібно привітати по днях на наступному тижні
+ та дати привітання(якщо дата привітання попадає на вих.день,привітання переноситься на пн.).
 
 "close", "exit"
  за будь-якою з цих команд бот завершує свою роботу
@@ -164,56 +154,79 @@ def parse_input(user_input):
     cmd, *args = user_input.split()
     cmd = cmd.strip().lower()
     return cmd, *args
-#add f 0123456789 
+
 @input_error
 def add_contact(args, contacts):
     nme, phone = args
 
     for n in contacts.data:
-        # print(n)
         if nme == n.value:
             return print(f"Contact with name {nme} is already exists.If you'd like to change it, use command 'change'")
-    #if 1<len(args)<3:
-    #else:    
+        
     r=Record(nme)
     r.add_phone(phone)
     contacts.add_record(r)
     return print("Contact added.")
-    #else:
-        #return "Invalid input"
+
 
 @input_error
 def chng_contact(args, contacts):    
         nme, phone = args
-        for n in contacts.data:
-            if nme == n.value:
-                temp_rec=contacts.find(nme)
-                temp_bd=temp_rec.birthday
-                contacts.delete(nme)
-                r=Record(nme)
-                r.add_phone(phone)
-                if temp_bd != None:
-                    r.add_birthday(temp_bd.strftime("%d.%m.%Y"))
-                contacts.add_record(r)
-                return print(f"Contact {nme} phone changed")
-        return print(f"Contact {nme} phone number doesn`t exist.")
-    #else:
-        #return "Invalid input"   
-@input_error
-def all_contact(contacts):
-    if contacts == {}:
-        print("\nContacts list is empty.\n")
-    else:
-        for key in contacts:
-            print(key,contacts[key])
+        if len(phone)== 10:
+            for n in contacts.data:
+                if nme == n.value:
+                    temp_rec=contacts.find(nme)
+                    temp_bd=temp_rec.birthday
+                    contacts.delete(nme)
+                    r=Record(nme)
+                    r.add_phone(phone)
+                    if temp_bd != None:
+                        r.add_birthday(temp_bd)
+                    contacts.add_record(r)
+                    return print(f"Contact {nme} phone changed")
+            return print(f"Contact {nme} doesn`t exist.")
+        else:
+            print("Phonenumber has invalid format")
+            raise TypeError 
 
 @input_error
 def usn_ph(args, contacts):
-    #try:
-    return print(args[0],contacts[args[0]])
-    #except:
-        #print(f"No user with name - {args[0]}")
-    
+    nme = args[0]
+    for n in contacts.data:
+        if nme == n.value:
+            return print(contacts.find(nme))
+    print(f"No user with name - {nme}")
+
+@input_error
+def add_bd (args,contacts):#Date format (DD.MM.YYYY)
+        if len(args[1])==10 and datetime.today()>datetime.strptime(args[1],'%d.%m.%Y'):
+            b_dt = args[1]
+            try:
+                y=int(b_dt[6:10]); m=int(b_dt[3:5]); d=int(b_dt[0:2])
+                user_date = date(y,m,d)
+                temp_cont = contacts.find(args[0])
+                temp_cont.add_birthday(user_date)
+                print("Birthday date added")
+
+            except Exception:
+                print("Invalid date or format(use DD.MM.YYYY format)")
+        else:
+            print("Invalid date or format(use DD.MM.YYYY format)")
+            raise TypeError
+            
+@input_error
+def show_birthday(args,contacts):
+        nme = args[0]
+        for n in contacts.data:
+            if nme == n.value:
+                temp_bd = contacts.find(nme)
+                return print(f"{nme} contact`s birthday is {temp_bd.birthday}(YYYY-MM-DD)")
+        print(f"No user with name - {nme}")
+
+@input_error
+def birthdays(args,contacts):
+    return contacts.get_upcoming_birthdays()
+
         
 def main():
     contacts = AddressBook()
@@ -224,26 +237,35 @@ def main():
         command, *args = parse_input(user_input)
 
         if command in ["close", "exit"]:
-            print("Good bye!")
-
+            print("\n Good bye! \n")
             break
-
-
 
         elif command == "hello":
             print("How can I help you?(\"Help\"-for help)")
         elif command == "add":
             add_contact(args, contacts)
         elif command == "all":
-            all_contact(contacts)
+            contacts.show_all()
         elif command == "change":
             chng_contact(args, contacts)
         elif command == "phone":
             usn_ph(args, contacts) 
         elif command == "help":
-            print(text)           
+            print(text)    
+        elif command == "add-birthday":
+            add_bd(args, contacts)
+        elif command == "show-birthday":
+            show_birthday(args, contacts)
+        elif command == "birthdays":
+            p =  birthdays(args, contacts)
+            if p:
+                for p_i in p:
+                    print(f"Don`t forget to cong {p_i[0]} on day {p_i[1]}(YYYY-MM-DD)")
+            else:
+                print("На цьому тижні ДР немає")
         else:
             print("Invalid command.")
+
 
 if __name__ == "__main__":
     main()
